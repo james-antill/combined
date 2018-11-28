@@ -68,14 +68,24 @@ func getCNames(knownFiles map[string]bool, suffix, dname string) ([]cName, error
 
 func countUnderbar(name string) int {
 	ret := 0
-	for _, r := range name {
-		if r != '_' {
+	for i := range name {
+		if name[i] != '_' {
 			break
 		}
 		ret++
 	}
 
 	return ret
+}
+
+func cmpBasename(ifname, jfname string) bool {
+	pi := countUnderbar(ifname)
+	pj := countUnderbar(jfname)
+	if pi != pj {
+		return pi > pj
+	}
+
+	return ifname < jfname
 }
 
 // Files returns an ordered list of files to combine
@@ -108,13 +118,7 @@ func (c *Combiner) Files() ([]string, error) {
 
 	// Sort based on basename of files
 	sort.Slice(cfiles, func(i, j int) bool {
-		pi := countUnderbar(cfiles[i].fname)
-		pj := countUnderbar(cfiles[j].fname)
-		if pi != pj {
-			return pi < pj
-		}
-
-		return cfiles[i].fname < cfiles[j].fname
+		return cmpBasename(cfiles[i].fname, cfiles[j].fname)
 	})
 
 	// Convert internal cname struct into simple file paths
