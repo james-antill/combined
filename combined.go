@@ -42,7 +42,21 @@ type cName struct {
 	fname string
 }
 
-func getCNames(knownFiles map[string]bool, suffix, dname string) ([]cName, error) {
+func filterName(knownFiles map[string]bool, name, confSuffix string) bool {
+	if strings.HasPrefix(name, ".") {
+		return true
+	}
+	if confSuffix != "" && !strings.HasSuffix(name, confSuffix) {
+		return true
+	}
+	if knownFiles[name] {
+		return true
+	}
+
+	return false
+}
+
+func getCNames(knownFiles map[string]bool, dname, suffix string) ([]cName, error) {
 	cfiles := []cName{}
 	files, err := ioutil.ReadDir(dname)
 	if err != nil {
@@ -50,13 +64,7 @@ func getCNames(knownFiles map[string]bool, suffix, dname string) ([]cName, error
 	}
 
 	for _, f := range files {
-		if strings.HasPrefix(f.Name(), ".") {
-			continue
-		}
-		if suffix != "" && !strings.HasSuffix(f.Name(), suffix) {
-			continue
-		}
-		if knownFiles[f.Name()] {
+		if filterName(knownFiles, f.Name(), suffix) {
 			continue
 		}
 		knownFiles[f.Name()] = true
@@ -97,7 +105,7 @@ func (c *Combiner) Files() ([]string, error) {
 	end := len(c.udirs) - 1
 	for i := range c.udirs {
 		dname := c.udirs[end-i]
-		ncfiles, err := getCNames(knownFiles, c.suffix, dname)
+		ncfiles, err := getCNames(knownFiles, dname, c.suffix)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +117,7 @@ func (c *Combiner) Files() ([]string, error) {
 	end = len(c.sdirs) - 1
 	for i := range c.sdirs {
 		dname := c.sdirs[end-i]
-		ncfiles, err := getCNames(knownFiles, c.suffix, dname)
+		ncfiles, err := getCNames(knownFiles, dname, c.suffix)
 		if err != nil {
 			return nil, err
 		}
