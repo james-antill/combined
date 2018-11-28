@@ -27,6 +27,11 @@ func (c *Combiner) AddSysDir(dname string) {
 	c.sdirs = append(c.sdirs, dname)
 }
 
+// SetSuffix sets the suffix to filter to in the directories.
+func (c *Combiner) SetSuffix(suffix string) {
+	c.suffix = suffix
+}
+
 // New creates a normal combiner, given an application name
 func New(name string) *Combiner {
 	c := &Combiner{}
@@ -44,6 +49,9 @@ type cName struct {
 
 func filterName(knownFiles map[string]bool, name, confSuffix string) bool {
 	if strings.HasPrefix(name, ".") {
+		return true
+	}
+	if strings.HasSuffix(name, "~") {
 		return true
 	}
 	if confSuffix != "" && !strings.HasSuffix(name, confSuffix) {
@@ -173,6 +181,8 @@ func (c *Combiner) Write(fname string) (int, error) {
 	}
 	f, err := roc.Create(fname)
 	defer f.Close() // clean up
+
+	// FIXME: use mode?
 
 	if _, err := f.Write(d); err != nil {
 		return 0, err
