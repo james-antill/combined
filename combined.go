@@ -48,15 +48,27 @@ type cName struct {
 }
 
 func filterName(knownFiles map[string]bool, name, confSuffix string) bool {
+	if confSuffix != "" {
+		if !strings.HasSuffix(name, confSuffix) {
+			return true
+		}
+	} else { // Drop backup files, if we don't have a configured suffix.
+		if strings.HasSuffix(name, "~") {
+			return true
+		}
+		if strings.HasSuffix(name, ".bak") {
+			return true
+		}
+		if strings.HasSuffix(name, ".swp") {
+			return true
+		}
+	}
+
+	// Always drop hidden files.
 	if strings.HasPrefix(name, ".") {
 		return true
 	}
-	if strings.HasSuffix(name, "~") {
-		return true
-	}
-	if confSuffix != "" && !strings.HasSuffix(name, confSuffix) {
-		return true
-	}
+
 	if knownFiles[name] {
 		return true
 	}
